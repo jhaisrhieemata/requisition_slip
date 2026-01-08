@@ -1,0 +1,1721 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Requisition Form v15</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================
+   GLOBAL
+============================ */
+      body {
+        background: #f8f9fa;
+        padding-top: 20px;
+      }
+
+      /* ============================
+   TABLE STYLING
+============================ */
+      .table-input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 2px 4px;
+      }
+
+      .table-input:focus {
+        outline: none;
+        box-shadow: none;
+      }
+
+      .table th,
+      .table td {
+        vertical-align: middle !important;
+        font-size: 0.85rem;
+        /* Allow wrapping on small screens so table fits responsively */
+        white-space: normal !important;
+        word-break: break-word;
+      }
+
+      .table thead th {
+        background-color: #f0f0f0;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .small.text-primary {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.8rem;
+      }
+
+      /* ============================
+   CARD
+============================ */
+      .card {
+        border-radius: 1rem;
+      }
+
+      /* ============================
+   ITEMS MODAL LIST
+============================ */
+      .items-modal-list {
+        max-height: 55vh;
+        overflow: auto;
+      }
+
+      small.text-primary {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.8rem;
+      }
+
+      /* ============================
+   SIGNATURE PAD (NEW + FIXED SIZE)
+============================ */
+      .signature-box {
+        width: 100%;
+        height: 250px;
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border: 2px solid #000;
+        border-radius: 12px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Canvas inside signature box */
+      .sig-pad {
+        border-radius: 6px;
+        background: white;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+      }
+
+      /* Example overlay */
+      .sig-example-overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+      }
+      .sig-example-overlay.show {
+        display: flex;
+      }
+      .sig-example-path {
+        opacity: 0.14;
+        filter: blur(0.1px);
+      }
+
+      /* ============================
+   SIGNATURE PREVIEW (optional)
+============================ */
+      #signaturePreview img {
+        display: block;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        max-height: 100px;
+      }
+
+      /* ============================
+   MODAL STYLING
+============================ */
+
+      .items-modal-list {
+        max-height: 55vh;
+        overflow: auto;
+      }
+
+      .modal-dialog.modal-lg {
+        max-width: 800px;
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 576px) {
+        .signature-box {
+          height: 160px;
+        }
+        .modal-dialog.modal-lg {
+          max-width: 95%;
+          margin: 0 10px;
+        }
+        .table thead th,
+        .table td,
+        .table th {
+          font-size: 0.8rem;
+        }
+        .items-modal-list {
+          max-height: 50vh;
+        }
+      }
+
+      .modal-content {
+        border-radius: 1rem;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.25);
+      }
+
+      /* Dim overlay */
+      .modal-backdrop.show {
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+      }
+
+      /* ============================
+   PROGRESS BAR
+============================ */
+      .progress-bar {
+        transition: width 0.4s ease-in-out, background-color 0.2s;
+        background-color: #198754;
+        color: white;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      const REDIRECT_URL = "https://sites.google.com/view/giantmotoprocorp";
+    </script>
+    <div class="container">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3 class="mb-3">Requisition Form</h3>
+
+          <form id="reqForm" onsubmit="return handleSubmit(event)">
+            <div class="row mb-2">
+              <div class="col-md-6">
+                <label class="form-label">Branch/Department</label>
+                <select class="form-select" id="branch" required>
+                  <option value=""></option>
+                  <!-- Branch options are loaded dynamically from the spreadsheet 'Branch List' sheet -->
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="date" required />
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">To</label>
+              <select class="form-select" id="to" required>
+                <option value=""></option>
+                <option>PURCHASING OFFICE</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Purpose of Request</label>
+              <select class="form-select" id="purpose" required>
+                <option value=""></option>
+                <option>OFFICE SUPPLIES</option>
+                <option>SPECIAL REQUEST</option>
+              </select>
+            </div>
+
+            <!-- Items -->
+            <div class="mb-3">
+              <div
+                class="d-flex justify-content-between align-items-center mb-2"
+              >
+                <h6>Items</h6>
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    onclick="openItemsModal()"
+                  >
+                    Choose Items
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    onclick="addRow()"
+                  >
+                    + Add Item
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="removeSelectedRows()"
+                  >
+                    – Remove
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="itemsTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 40px"></th>
+                      <th style="width: 80px">Qty</th>
+                      <th style="width: 120px">Unit</th>
+                      <th>Description</th>
+                      <th style="width: 120px">UPrice</th>
+                      <th style="width: 120px">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itemsBody"></tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5" class="text-end">
+                        <strong>Total</strong>
+                      </td>
+                      <td>
+                        <input
+                          id="total"
+                          class="form-control"
+                          readonly
+                          value="0.00"
+                        />
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Note Here</label>
+              <textarea
+                id="note"
+                class="form-control"
+                rows="3"
+                placeholder="Request details here..."
+                required
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Requested By</label>
+              <input
+                id="requested_by"
+                class="form-control"
+                placeholder="Complete Name Of Branch Manager"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">E-Signature</label>
+              <p style="color: BLUE">Please provide a wider signature.</p>
+              <div
+                class="signature-box border border-2 border-dark rounded bg-white mx-auto"
+              >
+                <canvas id="sigCanvas" class="sig-pad"></canvas>
+                <div
+                  class="sig-example-overlay"
+                  id="sigExampleOverlay"
+                  aria-hidden="true"
+                >
+                  <svg
+                    width="60%"
+                    height="60%"
+                    viewBox="0 0 200 200"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    <path
+                      class="sig-example-path"
+                      d="M 85 27 c 0 -0.24 0.45 -9.72 0 -14 c -0.17 -1.65 -0.95 -3.95 -2 -5 c -1.57 -1.57 -4.58 -3.15 -7 -4 c -4 -1.4 -8.72 -2.32 -13 -3 c -1.92 -0.3 -4.08 -0.3 -6 0 c -4.28 0.68 -9.01 1.47 -13 3 c -4.41 1.7 -8.63 5.13 -13 7 c -2.44 1.05 -5.87 0.7 -8 2 c -4.96 3.02 -10.34 7.83 -15 12 c -1.55 1.39 -3.11 3.22 -4 5 c -1.32 2.64 -2.38 6.09 -3 9 c -0.33 1.54 -0.49 3.62 0 5 c 1.02 2.85 2.91 6.63 5 9 c 2.6 2.94 7.02 5.27 10 8 c 0.84 0.77 1.15 2.34 2 3 c 1.9 1.48 4.66 3.03 7 4 c 1.48 0.62 3.7 0.35 5 1 c 1.08 0.54 1.93 2.39 3 3 c 1.04 0.59 2.8 0.45 4 1 c 3 1.38 6.18 3.07 9 5 c 3.5 2.4 7.46 5.25 10 8 c 1.07 1.16 1.68 3.38 2 5 c 0.3 1.51 -0.32 3.54 0 5 c 0.29 1.3 1.76 2.69 2 4 c 0.37 2.05 -0.27 4.72 0 7 c 0.39 3.32 1.68 6.67 2 10 c 0.34 3.59 0.29 7.34 0 11 c -0.38 4.71 -1.03 9.87 -2 14 c -0.25 1.05 -1.1 2.67 -2 3 c -4.36 1.61 -11.42 3.03 -17 4 c -1.92 0.33 -4.32 0.65 -6 0 c -7.76 -3 -19.01 -7.4 -25 -12 c -2.61 -2 -3.82 -7.29 -5 -11 c -1.09 -3.44 -1.54 -7.34 -2 -11 c -0.2 -1.64 -0.3 -3.49 0 -5 c 0.32 -1.62 1.03 -3.76 2 -5 c 1.15 -1.48 3.31 -3.06 5 -4 c 1.09 -0.6 2.96 -0.41 4 -1 c 1.07 -0.61 1.89 -2.39 3 -3 c 1.65 -0.92 3.91 -1.44 6 -2 c 18.46 -4.92 36.17 -8.63 54 -14 c 6.59 -1.99 12.7 -5.09 19 -8 c 2.46 -1.14 4.95 -2.43 7 -4 c 2.15 -1.66 4.44 -3.79 6 -6 c 2.3 -3.26 4.3 -7.35 6 -11 c 0.56 -1.2 1 -2.71 1 -4 c 0 -3.45 0.41 -8.74 -1 -11 c -1.32 -2.11 -5.95 -3.74 -9 -5 c -2.45 -1.01 -5.89 -2.47 -8 -2 c -2.99 0.66 -7.82 3.53 -10 6 c -2.26 2.56 -4.34 7.54 -5 11 c -0.55 2.88 -0.09 7.27 1 10 c 1.33 3.32 4.4 7.21 7 10 c 1.83 1.96 5.07 3.07 7 5 c 2.56 2.56 5.19 6.05 7 9 c 0.66 1.07 0.39 3.08 1 4 c 0.54 0.8 2.29 1.18 3 2 c 1.14 1.33 2.58 3.3 3 5 c 0.8 3.21 1.19 7.59 1 11 c -0.12 2.25 -1.15 4.87 -2 7 c -0.42 1.06 -1.12 2.37 -2 3 c -3.38 2.42 -7.89 4.94 -12 7 c -2.53 1.27 -5.4 2.51 -8 3 c -2.44 0.46 -5.54 -0.49 -8 0 c -3.9 0.78 -8.43 3.33 -12 4 c -1.16 0.22 -3.41 -0.18 -4 -1 c -1.55 -2.13 -4.62 -7.51 -4 -10 c 1 -3.98 6.4 -9.45 10 -14 c 2.82 -3.56 5.6 -7.37 9 -10 c 6.59 -5.1 14.33 -9.83 22 -14 c 7.76 -4.22 16.73 -7.23 24 -11 c 1.17 -0.61 1.86 -2.22 3 -3 c 5.06 -3.46 11.51 -6.36 16 -10 l 5 -7"
+                      stroke="#000000"
+                      stroke-width="6"
+                      fill="none"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div class="d-flex gap-2 mt-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  id="clearSigBtn"
+                >
+                  Clear Signature
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary"
+                  id="showExampleBtn"
+                >
+                  Show Example
+                </button>
+              </div>
+            </div>
+
+            <input type="hidden" id="sigData" />
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                Submit & Create PDF
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="resetForm()"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger ms-auto"
+                id="exitMainBtn"
+              >
+                Exit
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Modal (flat checkbox list) -->
+    <div class="modal fade" id="itemsModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Choose Items</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2 d-flex justify-content-between align-items-center">
+              <div>
+                <input
+                  type="text"
+                  id="itemsSearch"
+                  class="form-control form-control-sm"
+                  placeholder="Search items (optional)"
+                />
+              </div>
+              <div class="form-check ms-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="selectAllItems"
+                />
+                <label class="form-check-label" for="selectAllItems"
+                  >Select All</label
+                >
+              </div>
+            </div>
+            <div class="items-modal-list" id="itemsModalList"></div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="applySelectedItems()"
+            >
+              Apply Selected Items
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing Modal -->
+    <div class="modal fade" id="processModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+          <div class="modal-header">
+            <h5 class="modal-title w-100">Processing Request</h5>
+          </div>
+          <div class="modal-body">
+            <div id="modalContent">
+              <div class="text-center mb-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Saving and generating PDF...</p>
+              </div>
+              <div class="progress" style="height: 20px">
+                <div
+                  id="progressBar"
+                  class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                  style="width: 0%"
+                >
+                  0%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🛑 Prompt if signature missing -->
+    <div class="modal fade" id="noSigModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title w-100 text-dark">Signature Required</h5>
+          </div>
+          <div class="modal-body">
+            <p class="fw-bold text-danger">⚠️ Please sign before submitting.</p>
+            <button
+              class="btn btn-primary"
+              data-bs-dismiss="modal"
+              onclick="scrollToSignature()"
+            >
+              Go to Signature Pad
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exit Confirmation Modal -->
+    <div
+      class="modal fade"
+      id="exitConfirmModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title w-100">Confirm Exit</h5>
+          </div>
+          <div class="modal-body">
+            <p>
+              Are you sure you want to exit this form? Please close this tab
+              manually — your browser blocked automatic closing for security
+              reasons.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+              <button class="btn btn-danger" id="confirmExitBtn">
+                Yes, Exit
+              </button>
+              <button class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Offline / 404 Modal -->
+    <div class="modal fade" id="offlineModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title w-100">No Internet Connection</h5>
+          </div>
+          <div class="modal-body">
+            <div class="my-3">
+              <i class="bi bi-wifi-off text-danger" style="font-size: 3rem"></i>
+              <p class="mt-3 fs-5">You appear to be offline.</p>
+              <p class="text-muted">
+                Please check your connection and try again.
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="location.reload()">
+              Reload Page
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Connection Restored Modal -->
+    <div class="modal fade" id="onlineModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title w-100">Connection Restored</h5>
+          </div>
+          <div class="modal-body">
+            <div class="my-3">
+              <i class="bi bi-wifi text-success" style="font-size: 3rem"></i>
+              <p class="mt-3 fs-5">You’re back online!</p>
+              <p class="text-muted">All features are now available again.</p>
+            </div>
+            <button class="btn btn-success" data-bs-dismiss="modal">
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055">
+      <div
+        id="successToast"
+        class="toast align-items-center text-bg-success border-0"
+        role="alert"
+      >
+        <div class="d-flex">
+          <div class="toast-body">✅ Submitted successfully!</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // Items and units are loaded dynamically from the spreadsheet `REAL-TIME STOCKS`.
+      // Each row should contain: Item_ID (col A), Description (col B), Real-Time Stocks (col C), Unit (col D)
+      let itemsFromSheet = []; // array of {item_id, description, stock, unit}
+
+      // Signature pad state (captured strokes for smoothing/auto-fix)
+      let strokes = []; // array of strokes, each stroke is [{x,y}, ...]
+      let currentStroke = null;
+
+      const defaultUnitPlural = {
+        REAM: "REAMS",
+        PC: "PCS",
+        PAD: "PADS",
+        BOX: "BOXES",
+        PACK: "PACKS",
+        BDL: "BDLS",
+        BTL: "BTLS",
+        ROLL: "ROLLS",
+        SET: "SETS",
+        UNIT: "UNITS",
+      };
+
+      // dynamic unitPlural mapping (populated from sheet with sensible fallbacks)
+      let unitPlural = Object.assign({}, defaultUnitPlural);
+
+      // current item map: description -> base unit (e.g. 'PC', 'REAM')
+      let currentItemMap = {};
+      let useInputField = false;
+
+      // Load items + units from server
+      function loadItemsFromSheet(cb) {
+        google.script.run
+          .withSuccessHandler(function (rows) {
+            itemsFromSheet = rows || [];
+            currentItemMap = {};
+            itemsFromSheet.forEach((r) => {
+              const desc = (r.description || "").toString().trim();
+              const unit = (r.unit || "").toString().trim().toUpperCase();
+              if (desc) {
+                currentItemMap[desc] = unit;
+              }
+              if (unit && !unitPlural[unit]) {
+                unitPlural[unit] =
+                  defaultUnitPlural[unit] ||
+                  (unit.endsWith("S") ? unit : unit + "S");
+              }
+            });
+            if (typeof cb === "function") cb();
+          })
+          .withFailureHandler(function (err) {
+            console.warn("Failed to load items from sheet:", err);
+            if (typeof cb === "function") cb();
+          })
+          .getRealTimeStocksFull();
+      }
+
+      document.getElementById("purpose").addEventListener("change", () => {
+        const purpose = document.getElementById("purpose").value;
+        const addBtn = document.querySelector('button[onclick="addRow()"]');
+        const chooseBtn = document.querySelector(
+          'button[onclick="openItemsModal()"]'
+        );
+
+        const itemsBodyEl = document.getElementById("itemsBody");
+
+        if (purpose === "OFFICE SUPPLIES") {
+          // When OFFICE SUPPLIES is selected, the UI uses the Choose Items modal.
+          // Hide manual add button and clear the table (do not add an empty row).
+          itemsBodyEl.innerHTML = "";
+          addBtn.style.display = "none";
+          chooseBtn.style.display = "";
+
+          // Open the Choose Items modal automatically for a smoother UX.
+          try {
+            openItemsModal();
+          } catch (e) {
+            console.warn("Failed to open items modal:", e);
+          }
+        } else {
+          // For other purposes, allow manual rows.
+          addBtn.style.display = "";
+          chooseBtn.style.display = "none";
+        }
+
+        // Reset all rows
+        itemsBodyEl.innerHTML = "";
+        if (purpose !== "OFFICE SUPPLIES") {
+          addRow();
+        }
+      });
+
+      const purpose = document.getElementById("purpose");
+      const note = document.getElementById("note");
+
+      purpose.addEventListener("change", () => {
+        if (purpose.value === "SPECIAL REQUEST") {
+          note.setAttribute("required", "required");
+        } else {
+          note.removeAttribute("required");
+        }
+      });
+
+      // DOM ready
+      document.addEventListener("DOMContentLoaded", () => {
+        addRow();
+        initSignaturePad();
+        buildItemsModalList(); // populate modal list
+        loadBranchList(); // populate branch dropdown from sheet
+      });
+
+      // fetch branch list from server (Branch List sheet column A)
+      function loadBranchList() {
+        google.script.run
+          .withSuccessHandler(function (branches) {
+            const sel = document.getElementById("branch");
+            // remove all options except the first placeholder
+            while (sel.options.length > 1) sel.remove(1);
+
+            if (!branches || branches.length === 0) return;
+            branches.forEach((b) => {
+              const opt = document.createElement("option");
+              opt.value = b;
+              opt.textContent = b;
+              sel.appendChild(opt);
+            });
+          })
+          .withFailureHandler(function (err) {
+            console.warn("Failed to load branch list:", err);
+          })
+          .getBranchList();
+      }
+
+      // --- Signature Pad ---
+      function initSignaturePad() {
+        const canvas = document.getElementById("sigCanvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+
+        let drawing = false;
+
+        function resize() {
+          const ratio = Math.max(window.devicePixelRatio || 1, 1);
+          const box = document.querySelector(".signature-box");
+          const rect = box.getBoundingClientRect();
+          // set canvas pixel size
+          canvas.width = rect.width * ratio;
+          canvas.height = rect.height * ratio;
+          // reset transform then scale
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.scale(ratio, ratio);
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, rect.width, rect.height);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "#000";
+        }
+
+        function pointerPos(e) {
+          const rect = canvas.getBoundingClientRect();
+          const clientX =
+            e.clientX ||
+            (e.touches && e.touches[0] && e.touches[0].clientX) ||
+            0;
+          const clientY =
+            e.clientY ||
+            (e.touches && e.touches[0] && e.touches[0].clientY) ||
+            0;
+          return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function start(e) {
+          drawing = true;
+          currentStroke = [];
+          const p = pointerPos(e);
+          currentStroke.push(p);
+          // draw a tiny dot to start
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + 0.1, p.y + 0.1);
+          ctx.stroke();
+          e.preventDefault();
+        }
+
+        function move(e) {
+          if (!drawing) return;
+          const p = pointerPos(e);
+          const last = currentStroke[currentStroke.length - 1];
+          // avoid adding duplicate points
+          if (!last || last.x !== p.x || last.y !== p.y) {
+            currentStroke.push(p);
+            // draw immediate line segment
+            ctx.beginPath();
+            ctx.moveTo(last.x, last.y);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+          }
+        }
+
+        function end() {
+          drawing = false;
+          if (currentStroke && currentStroke.length) {
+            strokes.push(currentStroke);
+            currentStroke = null;
+          }
+          document.getElementById("sigData").value =
+            canvas.toDataURL("image/png");
+        }
+
+        // Attach events
+        canvas.addEventListener("pointerdown", start);
+        canvas.addEventListener("pointermove", move);
+        canvas.addEventListener("pointerup", end);
+        canvas.addEventListener("pointerleave", end);
+        canvas.addEventListener("touchstart", start, { passive: false });
+        canvas.addEventListener("touchmove", move, { passive: false });
+        canvas.addEventListener("touchend", end);
+
+        // Clear button
+        const clearBtn = document.getElementById("clearSigBtn");
+        if (clearBtn) {
+          clearBtn.addEventListener("click", () => {
+            clearSignaturePad();
+            toggleExampleOverlay(false);
+          });
+        }
+
+        // Show example toggle
+        const showBtn = document.getElementById("showExampleBtn");
+        if (showBtn) {
+          showBtn.addEventListener("click", () => {
+            const overlay = document.getElementById("sigExampleOverlay");
+            if (!overlay) return;
+            const showing = overlay.classList.contains("show");
+            toggleExampleOverlay(!showing);
+          });
+        }
+
+        window.addEventListener("resize", resize);
+        resize();
+      }
+
+      function scrollToSignature() {
+        document
+          .getElementById("sigCanvas")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      function isCanvasBlank(canvas) {
+        const ctx = canvas.getContext("2d");
+        const pixelData = ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        ).data;
+
+        // Check if all pixels are white (blank)
+        for (let i = 0; i < pixelData.length; i += 4) {
+          if (
+            pixelData[i] !== 255 ||
+            pixelData[i + 1] !== 255 ||
+            pixelData[i + 2] !== 255
+          ) {
+            return false; // Found non-white pixel → signature exists
+          }
+        }
+        return true; // Still white → blank signature
+      }
+
+      // Validate signature heuristics: detect dot, straight line (underline/vertical), or box
+      function validateSignature(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+
+        if (strokes && strokes.length > 0) {
+          let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
+
+          let totalLength = 0;
+          let totalPoints = 0;
+
+          let angleSum = 0;
+          let angleCount = 0;
+
+          // For checkmark detection
+          let directionChanges = 0;
+          let lastDX = null;
+          let lastDY = null;
+
+          strokes.forEach((stroke) => {
+            if (!stroke || stroke.length === 0) return;
+
+            totalPoints += stroke.length;
+
+            for (let i = 0; i < stroke.length; i++) {
+              const p = stroke[i];
+
+              // bounding box
+              if (p.x < minX) minX = p.x;
+              if (p.x > maxX) maxX = p.x;
+              if (p.y < minY) minY = p.y;
+              if (p.y > maxY) maxY = p.y;
+
+              // total line length
+              if (i > 0) {
+                const a = stroke[i - 1];
+                const dx = p.x - a.x;
+                const dy = p.y - a.y;
+                totalLength += Math.hypot(dx, dy);
+
+                // direction change detection (for check mark)
+                if (lastDX !== null && lastDY !== null) {
+                  const dir1 = Math.sign(lastDX);
+                  const dir2 = Math.sign(dx);
+                  const vert1 = Math.sign(lastDY);
+                  const vert2 = Math.sign(dy);
+
+                  if (
+                    (dir1 !== dir2 && Math.abs(dx) > 4) ||
+                    (vert1 !== vert2 && Math.abs(dy) > 4)
+                  ) {
+                    directionChanges++;
+                  }
+                }
+
+                lastDX = dx;
+                lastDY = dy;
+              }
+
+              // curvature
+              if (i > 1) {
+                const a = stroke[i - 2];
+                const b = stroke[i - 1];
+                const c = stroke[i];
+
+                const v1x = b.x - a.x,
+                  v1y = b.y - a.y;
+                const v2x = c.x - b.x,
+                  v2y = c.y - b.y;
+
+                const dot = v1x * v2x + v1y * v2y;
+                const mag1 = Math.hypot(v1x, v1y) || 1;
+                const mag2 = Math.hypot(v2x, v2y) || 1;
+
+                const angle = Math.acos(
+                  Math.max(-1, Math.min(1, dot / (mag1 * mag2)))
+                );
+                if (!isNaN(angle)) {
+                  angleSum += Math.abs(angle);
+                  angleCount++;
+                }
+              }
+            }
+          });
+
+          const width = maxX - minX;
+          const height = maxY - minY;
+          const avgCurvature = angleCount ? angleSum / angleCount : 0;
+
+          // ---------------------------------------------------------------
+          // 🔥 NEW HARD RULE: reject small, long, thin UNDERLINE
+          // ---------------------------------------------------------------
+          if (height < h * 0.06 && width > w * 0.45 && avgCurvature < 0.08) {
+            return {
+              ok: false,
+              reason:
+                "⚠️ Signature looks like an underline. Please sign properly.",
+            };
+          }
+
+          // ---------------------------------------------------------------
+          // 🔥 NEW HARD RULE: reject vertical line (short to long)
+          // ---------------------------------------------------------------
+          if (width < w * 0.07 && height > h * 0.35 && avgCurvature < 0.08) {
+            return {
+              ok: false,
+              reason:
+                "⚠️ Signature looks like a vertical line. Please sign naturally.",
+            };
+          }
+
+          // ---------------------------------------------------------------
+          // 🔥 NEW HARD RULE: reject CHECK MARK (✓ shape)
+          // logic: strong V shape = 1–3 direction changes + medium curvature
+          // ---------------------------------------------------------------
+          if (
+            directionChanges >= 1 &&
+            directionChanges <= 3 &&
+            width > w * 0.25 &&
+            height > h * 0.2 &&
+            avgCurvature > 0.12 &&
+            avgCurvature < 0.45
+          ) {
+            return {
+              ok: false,
+              reason:
+                "⚠️ Signature looks like a check mark ✓. Please sign fully.",
+            };
+          }
+
+          // ---------------------------------------------------------------
+          // Existing rules (unchanged)
+          // ---------------------------------------------------------------
+
+          if (
+            totalPoints === 0 ||
+            totalLength < Math.max(20, Math.min(w, h) * 0.25)
+          ) {
+            return {
+              ok: false,
+              reason: "⚠️ Signature is too small or blank. Please sign wider.",
+            };
+          }
+
+          if (
+            width < Math.max(12, w * 0.07) &&
+            height < Math.max(8, h * 0.05)
+          ) {
+            return {
+              ok: false,
+              reason:
+                "⚠️ Signature is too small (dot-like). Please sign wider.",
+            };
+          }
+
+          // Box detection
+          let edgeCount = 0,
+            interiorCount = 0;
+          strokes.forEach((stroke) => {
+            stroke.forEach((p) => {
+              const nearLeft = Math.abs(p.x - minX) < 6;
+              const nearRight = Math.abs(p.x - maxX) < 6;
+              const nearTop = Math.abs(p.y - minY) < 6;
+              const nearBottom = Math.abs(p.y - maxY) < 6;
+              if (nearLeft || nearRight || nearTop || nearBottom) edgeCount++;
+              else interiorCount++;
+            });
+          });
+
+          const edgeRatio = edgeCount / Math.max(1, edgeCount + interiorCount);
+          if (
+            edgeRatio > 0.7 &&
+            interiorCount < (edgeCount + interiorCount) * 0.35
+          ) {
+            return {
+              ok: false,
+              reason: "⚠️ Signature looks like a box. Please sign naturally.",
+            };
+          }
+
+          if (totalLength > Math.max(w, h) * 0.5 || avgCurvature > 0.03) {
+            return { ok: true };
+          }
+
+          return {
+            ok: false,
+            reason: "⚠️ Signature appears too simple. Please sign naturally.",
+          };
+        }
+
+        // ---------------------------------------------------------------
+        // Fallback pixel-based method (unchanged)
+        // ---------------------------------------------------------------
+        const ctx = canvas.getContext("2d");
+        const pxW = canvas.width;
+        const pxH = canvas.height;
+        const data = ctx.getImageData(0, 0, pxW, pxH).data;
+        const threshold = 250;
+        const points = [];
+        for (let y = 0; y < pxH; y++) {
+          for (let x = 0; x < pxW; x++) {
+            const i = (y * pxW + x) * 4;
+            const r = data[i],
+              g = data[i + 1],
+              b = data[i + 2],
+              a = data[i + 3];
+            if (a > 10 && (r < threshold || g < threshold || b < threshold))
+              points.push({ x, y });
+          }
+        }
+        if (!points.length)
+          return { ok: false, reason: "⚠️ Signature is blank." };
+
+        let minX2 = Infinity,
+          minY2 = Infinity,
+          maxX2 = -Infinity,
+          maxY2 = -Infinity;
+
+        points.forEach((p) => {
+          if (p.x < minX2) minX2 = p.x;
+          if (p.x > maxX2) maxX2 = p.x;
+          if (p.y < minY2) minY2 = p.y;
+          if (p.y > maxY2) maxY2 = p.y;
+        });
+
+        const width2 = maxX2 - minX2 + 1;
+        const height2 = maxY2 - minY2 + 1;
+
+        if (
+          width2 < Math.max(12, pxW * 0.05) &&
+          height2 < Math.max(12, pxH * 0.03)
+        )
+          return {
+            ok: false,
+            reason: "⚠️ Signature is too small (dot-like). Please sign wider.",
+          };
+
+        if (points.length < 400)
+          return {
+            ok: false,
+            reason: "⚠️ Signature appears too sparse. Please sign fully.",
+          };
+
+        return { ok: true };
+      }
+
+      function clearSignaturePad() {
+        const canvas = document.getElementById("sigCanvas");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+
+        // Clear the canvas to white background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // fill white in CSS coordinate space (canvas is scaled)
+        const box = document
+          .querySelector(".signature-box")
+          .getBoundingClientRect();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, box.width, box.height);
+
+        // Clear strokes state
+        strokes = [];
+        currentStroke = null;
+
+        // Clear hidden input
+        document.getElementById("sigData").value = "";
+
+        // hide example overlay if visible
+        toggleExampleOverlay(false);
+      }
+
+      // Redraw signature from strokes. If smooth=true use quadratic smoothing.
+      function redrawSignature(smooth = true) {
+        const canvas = document.getElementById("sigCanvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        // clear
+        const box = document
+          .querySelector(".signature-box")
+          .getBoundingClientRect();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, box.width, box.height);
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#000";
+
+        strokes.forEach((stroke) => {
+          if (!stroke || stroke.length === 0) return;
+          if (!smooth || stroke.length < 3) {
+            ctx.beginPath();
+            ctx.moveTo(stroke[0].x, stroke[0].y);
+            for (let i = 1; i < stroke.length; i++) {
+              ctx.lineTo(stroke[i].x, stroke[i].y);
+            }
+            ctx.stroke();
+            return;
+          }
+
+          // Quadratic smoothing
+          ctx.beginPath();
+          ctx.moveTo(stroke[0].x, stroke[0].y);
+          for (let i = 1; i < stroke.length - 1; i++) {
+            const cx = (stroke[i].x + stroke[i + 1].x) / 2;
+            const cy = (stroke[i].y + stroke[i + 1].y) / 2;
+            ctx.quadraticCurveTo(stroke[i].x, stroke[i].y, cx, cy);
+          }
+          // final segment
+          const last = stroke[stroke.length - 1];
+          ctx.lineTo(last.x, last.y);
+          ctx.stroke();
+        });
+
+        // update hidden input
+        try {
+          document.getElementById("sigData").value =
+            canvas.toDataURL("image/png");
+        } catch (e) {}
+      }
+
+      // Auto-fix signature: apply smoothing and minor scaling if signature is too thin
+      function autoFixSignature() {
+        const canvas = document.getElementById("sigCanvas");
+        if (!canvas) return;
+
+        // If no strokes, nothing to do
+        if (!strokes || strokes.length === 0) return;
+
+        // Simple smoothing pass
+        redrawSignature(true);
+
+        // If still low pixel count, redraw with heavier smoothing by resampling
+        const ctx = canvas.getContext("2d");
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const alphaCount = (() => {
+          let c = 0;
+          for (let i = 3; i < img.data.length; i += 4)
+            if (img.data[i] > 10) c++;
+          return c;
+        })();
+
+        if (alphaCount < 250) {
+          // second pass: slightly increase lineWidth and redraw
+          ctx.lineWidth = 3;
+          redrawSignature(true);
+          ctx.lineWidth = 2;
+        }
+
+        // update hidden input with smoothed result
+        try {
+          document.getElementById("sigData").value =
+            canvas.toDataURL("image/png");
+        } catch (e) {}
+      }
+
+      function toggleExampleOverlay(show) {
+        const overlay = document.getElementById("sigExampleOverlay");
+        if (!overlay) return;
+        if (show) overlay.classList.add("show");
+        else overlay.classList.remove("show");
+      }
+
+      // === REAL-TIME STOCK + SHOW ALL + OUT-OF-STOCK DISABLED ===
+      function buildItemsModalList() {
+        const container = document.getElementById("itemsModalList");
+        container.innerHTML = '<p class="text-center mt-2">Loading items…</p>';
+
+        // Ensure itemsFromSheet is populated
+        const render = () => {
+          container.innerHTML = "";
+
+          const y3sItems = [
+            "ALBATROSS",
+            "BROWN SUGAR",
+            "CANDIES",
+            "COFFEE CUPS",
+            "COFFEE STICK",
+            "CREAMER",
+            "DRINKING CUPS",
+            "GLASS CLEANER",
+            "STIRRER",
+            "TISSUE PAPER",
+          ];
+
+          const allItems = itemsFromSheet
+            .map((r) => r.description)
+            .filter(Boolean)
+            .sort();
+
+          // scale for bar percentages
+          const stocksArray = itemsFromSheet
+            .map((r) => Number(r.stock) || 0)
+            .filter((n) => n >= 0);
+          const scale = stocksArray.length ? Math.max(...stocksArray) : 50;
+
+          allItems.forEach((item, idx) => {
+            const rec =
+              itemsFromSheet.find((r) => r.description === item) || {};
+            const stock = Number(rec.stock) || 0;
+
+            // === availability status text ===
+            const statusText =
+              stock > 0
+                ? `<span class="text-success fw-bold">Available</span>`
+                : `<span class="text-danger fw-bold">Out of Stock</span>`;
+
+            const stockLabel =
+              stock > 0
+                ? `<div class="small text-muted">Stock: <strong>${stock}</strong></div>`
+                : "";
+
+            const disabledAttr = ""; // always enabled
+
+            const percent = stock > 0 ? Math.round((stock / scale) * 100) : 0;
+            const barColor = stock > 0 ? "bg-success" : "bg-danger";
+
+            const id = "item_chk_" + idx;
+            const isY3 = y3sItems.includes(item);
+            const itemLabelText = isY3 ? `${item} — (ONLY FOR Y3'S)` : item;
+
+            const row = document.createElement("div");
+            row.className = "item-row p-2 border rounded mb-2";
+
+            row.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+
+              <div>
+                <input class="form-check-input item-checkbox"
+                       type="checkbox"
+                       value="${escapeHtml(item)}"
+                       id="${id}" ${disabledAttr}>
+
+                <label class="form-check-label ms-1 fw-bold" for="${id}">
+                  ${escapeHtml(itemLabelText)}
+                </label>
+
+                <!-- Status: Available / Out of Stock -->
+                <div>${statusText}</div>
+
+                <!-- Visible only if stock >= 1 -->
+                ${stockLabel}
+              </div>
+
+              <div style="width:180px;">
+                <div class="progress" style="height:8px;">
+                  <div class="progress-bar ${barColor}" style="width:${percent}%"></div>
+                </div>
+              </div>
+
+            </div>
+          `;
+
+            container.appendChild(row);
+          });
+
+          // --- SEARCH FUNCTION ---
+          const searchInput = document.getElementById("itemsSearch");
+          searchInput.oninput = (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            document
+              .querySelectorAll("#itemsModalList .item-row")
+              .forEach((row) => {
+                const label = (
+                  row.querySelector("label")?.textContent || ""
+                ).toLowerCase();
+                row.style.display = label.includes(q) ? "" : "none";
+              });
+          };
+
+          // --- SELECT ALL ---
+          const selectAll = document.getElementById("selectAllItems");
+          selectAll.onchange = (e) => {
+            const checked = e.target.checked;
+            document
+              .querySelectorAll("#itemsModalList .item-row")
+              .forEach((row) => {
+                const chk = row.querySelector(".item-checkbox");
+                if (!chk) return;
+                if (row.style.display !== "none") {
+                  chk.checked = checked;
+                }
+              });
+          };
+        };
+
+        // If itemsFromSheet already loaded render immediately, otherwise fetch first
+        if (itemsFromSheet && itemsFromSheet.length > 0) {
+          render();
+        } else {
+          loadItemsFromSheet(render);
+        }
+      }
+
+      // Open items modal
+      function openItemsModal() {
+        // rebuild in case currentItemMap changed
+        buildItemsModalList();
+        const modal = new bootstrap.Modal(
+          document.getElementById("itemsModal")
+        );
+        modal.show();
+      }
+
+      /// add single empty row
+      function addRow() {
+        const tbody = document.getElementById("itemsBody");
+        const tr = document.createElement("tr");
+
+        // Always use clean manual input (no typedDescription)
+        const itemColumn = `
+                          <input type="text" class="form-control table-input description" id="removeNote" placeholder="Remove this if no more Entry"
+                          oninput="manualUnit(this)" required>
+      `;
+
+        tr.innerHTML = `
+        <td class="text-center">
+          <input type="checkbox" class="form-check-input row-select">
+        </td>
+        <td>
+          <input type="number" min="1" class="form-control table-input qty"
+                 oninput="recalcRow(this)" required>
+        </td>
+        <td>
+          <input class="form-control table-input unit" readonly>
+        </td>
+        <td>${itemColumn}</td>
+        <td>
+          <input type="number" min="0.00" step="any" class="form-control table-input uprice" oninput="recalcRow(this)">
+
+        </td>
+        <td>
+          <input class="form-control table-input amount" readonly>
+        </td>
+      `;
+
+        tbody.appendChild(tr);
+      }
+
+      // applySelectedItems: get checked items and create rows
+      function applySelectedItems() {
+        const checked = Array.from(
+          document.querySelectorAll(
+            "#itemsModalList input.item-checkbox:checked"
+          )
+        ).map((i) => i.value);
+        if (!checked || checked.length === 0) {
+          // close modal silently (or show small message)
+          const modalEl = document.getElementById("itemsModal");
+          bootstrap.Modal.getInstance(modalEl).hide();
+          return;
+        }
+
+        const tbody = document.getElementById("itemsBody");
+
+        checked.forEach((item) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+                <td class="text-center"><input type="checkbox" class="form-check-input row-select"></td>
+                <td><input type="number" min="1" class="form-control table-input qty" value="0" oninput="recalcRow(this)" required></td>
+                <td><input class="form-control table-input unit" readonly></td>
+                <td><input class="form-control table-input description" value="${escapeHtml(
+                  item
+                )}" readonly></td>
+                <td><input type="number" min="0.00" step="any" class="form-control table-input uprice" oninput="recalcRow(this)"></td>
+                <td><input class="form-control table-input amount" readonly></td>
+              `;
+          tbody.appendChild(tr);
+          setUnitForRow(tr, item);
+        });
+
+        // update totals
+        recalcTotal();
+
+        // uncheck selectAll and close modal
+        document.getElementById("selectAllItems").checked = false;
+        const modalEl = document.getElementById("itemsModal");
+        bootstrap.Modal.getInstance(modalEl).hide();
+      }
+
+      // set unit for a row given item name
+      function setUnitForRow(tr, itemName) {
+        const qty = parseFloat(tr.querySelector(".qty").value) || 1;
+        const unitField = tr.querySelector(".unit");
+        const baseUnit = currentItemMap[itemName] || "";
+        unitField.value = qty > 1 ? unitPlural[baseUnit] || baseUnit : baseUnit;
+      }
+
+      // manual unit for typed descriptions (special request)
+      function manualUnit(el) {
+        const tr = el.closest("tr");
+        const unitField = tr.querySelector(".unit");
+        unitField.removeAttribute("readonly");
+        unitField.value = "";
+      }
+
+      function recalcRow(el) {
+        const tr = el.closest("tr");
+
+        const qty = Number.parseFloat(tr.querySelector(".qty").value) || 0;
+        const up = Number.parseFloat(tr.querySelector(".uprice").value) || 0;
+        const desc = tr.querySelector(".description").value;
+
+        const baseUnit =
+          currentItemMap[desc] || tr.querySelector(".unit").value || "";
+        const unitField = tr.querySelector(".unit");
+
+        unitField.value = qty > 1 ? unitPlural[baseUnit] || baseUnit : baseUnit;
+
+        tr.querySelector(".amount").value = (qty * up).toFixed(2);
+
+        recalcTotal();
+      }
+
+      function recalcTotal() {
+        let total = 0;
+        document
+          .querySelectorAll("#itemsBody .amount")
+          .forEach((a) => (total += parseFloat(a.value) || 0));
+        document.getElementById("total").value = total.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      function removeSelectedRows() {
+        document.querySelectorAll("#itemsBody tr").forEach((r) => {
+          if (r.querySelector(".row-select").checked) r.remove();
+        });
+        recalcTotal();
+      }
+
+      function collectFormData() {
+        const items = [];
+        document.querySelectorAll("#itemsBody tr").forEach((r) => {
+          const qty = r.querySelector(".qty").value || "";
+          const unit = r.querySelector(".unit").value || "";
+          const desc = r.querySelector(".description").value || "";
+          const up = r.querySelector(".uprice").value || "";
+          const amt = r.querySelector(".amount").value || "";
+          if (qty && desc)
+            items.push({
+              qty,
+              unit,
+              description: desc,
+              uprice: up,
+              amount: amt,
+            });
+        });
+        return {
+          branch: document.getElementById("branch").value,
+          date: document.getElementById("date").value,
+          to: document.getElementById("to").value,
+          purpose: document.getElementById("purpose").value,
+          items,
+          total: document.getElementById("total").value,
+          note: document.getElementById("note").value,
+          requested_by: document.getElementById("requested_by").value,
+          requested_by_signature:
+            document.getElementById("sigData").value || "",
+        };
+      }
+
+      // handle submit
+      function handleSubmit(e) {
+        e.preventDefault();
+        // ❗ Strong signature validation
+        const canvas = document.getElementById("sigCanvas");
+        const sigData = document.getElementById("sigData").value;
+
+        // BLOCK if signature is blank, or fails validation (dot, line, box)
+        if (!sigData || isCanvasBlank(canvas)) {
+          const noSigModal = new bootstrap.Modal(
+            document.getElementById("noSigModal")
+          );
+          const p = document.querySelector("#noSigModal .modal-body p.fw-bold");
+          if (p) p.innerHTML = "⚠️ Please sign before submitting.";
+          noSigModal.show();
+          return false;
+        }
+
+        const validation = validateSignature(canvas);
+        if (!validation.ok) {
+          const noSigModal = new bootstrap.Modal(
+            document.getElementById("noSigModal")
+          );
+          const p = document.querySelector("#noSigModal .modal-body p.fw-bold");
+          if (p) p.innerHTML = validation.reason;
+          noSigModal.show();
+          scrollToSignature();
+          return false;
+        }
+
+        // Auto-fix (smoothing) to improve thin/jittery strokes before submission
+        try {
+          autoFixSignature();
+        } catch (e) {
+          console.warn("autoFixSignature failed", e);
+        }
+
+        const data = collectFormData();
+        const modal = new bootstrap.Modal(
+          document.getElementById("processModal")
+        );
+        modal.show();
+
+        const progressBar = document.getElementById("progressBar");
+        progressBar.style.width = "0%";
+        progressBar.textContent = "0%";
+        progressBar.style.width = "95%";
+        progressBar.textContent = "Processing...";
+
+        google.script.run
+          .withFailureHandler((err) => {
+            progressBar.classList.remove("bg-success");
+            progressBar.classList.add("bg-danger");
+            progressBar.textContent = "Error";
+            alert(
+              "Submission failed: " +
+                (err && err.message ? err.message : JSON.stringify(err))
+            );
+          })
+          .withSuccessHandler((pdfUrl) => {
+            progressBar.style.width = "100%";
+            progressBar.textContent = "Done!";
+            resetForm();
+            clearSignaturePad(); // 🟦 fully clears signature pad
+            const toastEl = document.getElementById("successToast");
+            const toast = new bootstrap.Toast(toastEl, { delay: 1500 });
+            toast.show();
+
+            // show print option inside modal content
+            document.getElementById("modalContent").innerHTML = `
+                    <div class="text-success mb-3">
+                      <i class="bi bi-check-circle-fill fs-2"></i>
+                      <h5 class="mt-2">Saved Successfully!</h5>
+                      <p class="fw-bold text-danger">📄 Print Before Close!!!</p>
+                      <p class="fw-bold ">Kindly reload the page to make another request!</p>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2">
+                      <button class="btn btn-success" id="printPdfBtn"><i class="bi bi-printer"></i> Print PDF</button>
+                      <button class="btn btn-secondary" id="reloadBtn"><i class="bi bi-arrow-clockwise"></i> Close</button>
+                    </div>
+                  `;
+            const printBtn = document.getElementById("printPdfBtn");
+            if (printBtn) {
+              printBtn.onclick = () => {
+                const w = window.open(pdfUrl, "_blank", "width=800,height=900");
+                if (!w) {
+                  alert("Please allow pop-ups so the PDF can open.");
+                } else {
+                  // try to auto print when loaded
+                  const checkLoaded = setInterval(() => {
+                    try {
+                      if (w.document.readyState === "complete") {
+                        clearInterval(checkLoaded);
+                        w.focus();
+                        w.print();
+                      }
+                    } catch (err) {
+                      clearInterval(checkLoaded);
+                      w.focus();
+                      w.print();
+                    }
+                  }, 700);
+                }
+              };
+            }
+            const reloadBtn = document.getElementById("reloadBtn");
+            if (reloadBtn) {
+              reloadBtn.onclick = () => {
+                location.reload();
+              };
+            }
+          })
+          .saveAndCreatePdf(data);
+
+        return false;
+      }
+
+      function resetForm() {
+        document.getElementById("reqForm").reset();
+        document.getElementById("itemsBody").innerHTML = "";
+        addRow();
+        document.getElementById("total").value = "0.00";
+        document.getElementById("modalContent").innerHTML = `
+              <div class="text-center mb-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Saving and generating PDF...</p>
+              </div>
+              <div class="progress" style="height:20px">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width:0%">0%</div>
+              </div>
+            `;
+      }
+
+      // EXIT BUTTON WITH URL REDIRECT (no alert)
+      document.getElementById("exitMainBtn").onclick = () => {
+        const exitModal = new bootstrap.Modal(
+          document.getElementById("exitConfirmModal")
+        );
+        exitModal.show();
+        document.getElementById("confirmExitBtn").onclick = () => {
+          exitModal.hide();
+          try {
+            window.close();
+          } catch (e) {}
+          window.location.href = REDIRECT_URL;
+        };
+      };
+
+      // small helper to avoid XSS in inserted HTML text
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // === Internet Connection Detector with Online/Offline Prompts ===
+      function showOfflineModal() {
+        const offlineModal = new bootstrap.Modal(
+          document.getElementById("offlineModal")
+        );
+        offlineModal.show();
+      }
+
+      function showOnlineModal() {
+        const onlineModal = new bootstrap.Modal(
+          document.getElementById("onlineModal")
+        );
+        onlineModal.show();
+      }
+
+      // Detect initial state
+      if (!navigator.onLine) {
+        showOfflineModal();
+      } else {
+        console.log("You are online.");
+      }
+
+      // Listen for changes
+      window.addEventListener("offline", () => {
+        showOfflineModal();
+      });
+
+      window.addEventListener("online", () => {
+        const offlineElement = document.getElementById("offlineModal");
+        const offlineInstance = bootstrap.Modal.getInstance(offlineElement);
+        if (offlineInstance) offlineInstance.hide();
+        showOnlineModal();
+      });
+      document.getElementById("closeBtn").addEventListener("click", () => {
+        const modal = bootstrap.Modal.getInstance(
+          document.getElementById("noSigModal")
+        );
+        if (modal) modal.hide();
+      });
+    </script>
+  </body>
+</html>
