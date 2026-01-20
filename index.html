@@ -1,10 +1,10 @@
 <!-- index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Requisition Form v19</title>
+    <title>Requisition Form v20</title>
 
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -184,7 +184,9 @@
    PROGRESS BAR
 ============================ */
       .progress-bar {
-        transition: width 0.4s ease-in-out, background-color 0.2s;
+        transition:
+          width 0.4s ease-in-out,
+          background-color 0.2s;
         background-color: #198754;
         color: white;
         font-weight: 500;
@@ -200,7 +202,7 @@
         <div class="card-body">
           <h3 class="mb-3">Requisition Form</h3>
 
-          <form id="reqForm" onsubmit="return handleSubmit(event)">
+          <form id="reqForm" onsubmit="return handleSubmit(event);">
             <div class="row mb-2">
               <div class="col-md-6">
                 <label class="form-label">Branch/Department</label>
@@ -644,7 +646,7 @@
         const purpose = document.getElementById("purpose").value;
         const addBtn = document.querySelector('button[onclick="addRow()"]');
         const chooseBtn = document.querySelector(
-          'button[onclick="openItemsModal()"]'
+          'button[onclick="openItemsModal()"]',
         );
 
         const itemsBodyEl = document.getElementById("itemsBody");
@@ -916,7 +918,7 @@
           0,
           0,
           canvas.width,
-          canvas.height
+          canvas.height,
         ).data;
 
         for (let i = 0; i < pixelData.length; i += 4) {
@@ -1010,7 +1012,7 @@
                 const mag2 = Math.hypot(v2x, v2y) || 1;
 
                 const angle = Math.acos(
-                  Math.max(-1, Math.min(1, dot / (mag1 * mag2)))
+                  Math.max(-1, Math.min(1, dot / (mag1 * mag2))),
                 );
                 if (!isNaN(angle)) {
                   angleSum += Math.abs(angle);
@@ -1483,7 +1485,7 @@
         // rebuild in case currentItemMap changed
         buildItemsModalList();
         const modal = new bootstrap.Modal(
-          document.getElementById("itemsModal")
+          document.getElementById("itemsModal"),
         );
         modal.show();
       }
@@ -1527,8 +1529,8 @@
       function applySelectedItems() {
         const checked = Array.from(
           document.querySelectorAll(
-            "#itemsModalList input.item-checkbox:checked"
-          )
+            "#itemsModalList input.item-checkbox:checked",
+          ),
         ).map((i) => i.value);
         if (!checked || checked.length === 0) {
           // close modal silently (or show small message)
@@ -1546,7 +1548,7 @@
                 <td><input type="number" min="1" class="form-control table-input qty" value="0" oninput="recalcRow(this)" required></td>
                 <td><input class="form-control table-input unit" readonly></td>
                 <td><input class="form-control table-input description" value="${escapeHtml(
-                  item
+                  item,
                 )}" readonly></td>
                 <td><input type="number" min="0.00" step="any" class="form-control table-input uprice" oninput="recalcRow(this)"></td>
                 <td><input class="form-control table-input amount" readonly></td>
@@ -1595,7 +1597,7 @@
           {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          }
+          },
         );
         recalcTotal();
       }
@@ -1660,7 +1662,7 @@
         // BLOCK if signature is blank, or fails validation (dot, line, box)
         if (!sigData || isCanvasBlank(canvas)) {
           const noSigModal = new bootstrap.Modal(
-            document.getElementById("noSigModal")
+            document.getElementById("noSigModal"),
           );
           const p = document.querySelector("#noSigModal .modal-body p.fw-bold");
           if (p) p.innerHTML = "⚠️ Please sign before submitting.";
@@ -1671,7 +1673,7 @@
         const validation = validateSignature(canvas);
         if (!validation.ok) {
           const noSigModal = new bootstrap.Modal(
-            document.getElementById("noSigModal")
+            document.getElementById("noSigModal"),
           );
           const p = document.querySelector("#noSigModal .modal-body p.fw-bold");
           if (p) p.innerHTML = validation.reason;
@@ -1689,7 +1691,7 @@
 
         const data = collectFormData();
         const modal = new bootstrap.Modal(
-          document.getElementById("processModal")
+          document.getElementById("processModal"),
         );
         modal.show();
 
@@ -1706,7 +1708,7 @@
             progressBar.textContent = "Error";
             alert(
               "Submission failed: " +
-                (err && err.message ? err.message : JSON.stringify(err))
+                (err && err.message ? err.message : JSON.stringify(err)),
             );
           })
           .withSuccessHandler((pdfUrl) => {
@@ -1786,7 +1788,7 @@
       // EXIT BUTTON WITH URL REDIRECT (no alert)
       document.getElementById("exitMainBtn").onclick = () => {
         const exitModal = new bootstrap.Modal(
-          document.getElementById("exitConfirmModal")
+          document.getElementById("exitConfirmModal"),
         );
         exitModal.show();
         document.getElementById("confirmExitBtn").onclick = () => {
@@ -1811,14 +1813,14 @@
       // === Internet Connection Detector with Online/Offline Prompts ===
       function showOfflineModal() {
         const offlineModal = new bootstrap.Modal(
-          document.getElementById("offlineModal")
+          document.getElementById("offlineModal"),
         );
         offlineModal.show();
       }
 
       function showOnlineModal() {
         const onlineModal = new bootstrap.Modal(
-          document.getElementById("onlineModal")
+          document.getElementById("onlineModal"),
         );
         onlineModal.show();
       }
@@ -1843,7 +1845,7 @@
       });
       document.getElementById("closeBtn").addEventListener("click", () => {
         const modal = bootstrap.Modal.getInstance(
-          document.getElementById("noSigModal")
+          document.getElementById("noSigModal"),
         );
         if (modal) modal.hide();
       });
