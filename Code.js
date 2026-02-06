@@ -7,7 +7,7 @@ const REDIRECT_URL = "https://sites.google.com/view/giantmotoprocorp";
 // === FRONTEND LOADER ===
 function doGet() {
   return HtmlService.createHtmlOutputFromFile("index")
-    .setTitle("Requisition Form v15")
+    .setTitle("Requisition Form v20")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -129,8 +129,8 @@ function createPdfFromTemplate(data, timestamp) {
     `Requisition ${Utilities.formatDate(
       timestamp,
       "Asia/Manila",
-      "yyyy-MM-dd HH:mm:ss"
-    )}`
+      "yyyy-MM-dd HH:mm:ss",
+    )}`,
   );
 
   const doc = DocumentApp.openById(copy.getId());
@@ -165,17 +165,19 @@ function createPdfFromTemplate(data, timestamp) {
 
       const table = body.insertTable(body.getChildIndex(parent) + 1, tableData);
       table.setBorderWidth(1);
-      table.setFontSize(9);
+      // Reduce default font size for denser rows
+      table.setFontSize(8);
 
       for (let i = 0; i < table.getNumRows(); i++) {
         const row = table.getRow(i);
         for (let j = 0; j < row.getNumCells(); j++) {
           const cell = row.getCell(j);
+          // Smaller padding to reduce row height
           cell
-            .setPaddingTop(3)
-            .setPaddingBottom(3)
-            .setPaddingLeft(5)
-            .setPaddingRight(5);
+            .setPaddingTop(2)
+            .setPaddingBottom(2)
+            .setPaddingLeft(3)
+            .setPaddingRight(3);
           try {
             if (j === 0) cell.setWidth(40);
             if (j === 1) cell.setWidth(60);
@@ -190,16 +192,35 @@ function createPdfFromTemplate(data, timestamp) {
             text.getType() === DocumentApp.ElementType.PARAGRAPH
           ) {
             const para = text.asParagraph();
+            // Remove extra spacing around paragraphs and use single line spacing
+            try {
+              para.setSpacingBefore(0).setSpacingAfter(0).setLineSpacing(1);
+            } catch (e) {}
             if (i === 0) {
-              para.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-              para.setBold(true);
+              // Header: keep slightly larger and bold
+              try {
+                para
+                  .setAlignment(DocumentApp.HorizontalAlignment.CENTER)
+                  .setBold(true)
+                  .setFontSize(9);
+              } catch (e) {
+                para
+                  .setAlignment(DocumentApp.HorizontalAlignment.CENTER)
+                  .setBold(true);
+              }
               try {
                 cell.setBackgroundColor("#f0f0f0");
               } catch (e) {}
-            } else if ([0, 1, 3, 4].includes(j)) {
-              para.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
             } else {
-              para.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
+              // Body rows: smaller font to tighten rows
+              try {
+                para.setFontSize(8);
+              } catch (e) {}
+              if ([0, 1, 3, 4].includes(j)) {
+                para.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+              } else {
+                para.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
+              }
             }
           }
         }
@@ -214,12 +235,12 @@ function createPdfFromTemplate(data, timestamp) {
       const base64Data = base64Signature.trim();
       if (base64Data) {
         const imgBytes = Utilities.base64Decode(
-          base64Data.replace(/^data:image\/png;base64,/, "")
+          base64Data.replace(/^data:image\/png;base64,/, ""),
         );
         const sigBlob = Utilities.newBlob(
           imgBytes,
           "image/png",
-          "signature.png"
+          "signature.png",
         );
         const searchSig = body.findText("{{REQUESTED_BY_SIGNATURE}}");
         if (searchSig) {
@@ -229,10 +250,10 @@ function createPdfFromTemplate(data, timestamp) {
           el.asText().setText("");
           const spacerBlob = Utilities.newBlob(
             Utilities.base64Decode(
-              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII="
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAAACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=",
             ),
             "image/png",
-            "spacer.png"
+            "spacer.png",
           );
           parent
             .insertInlineImage(insertIndex, spacerBlob)
@@ -256,7 +277,7 @@ function createPdfFromTemplate(data, timestamp) {
   const pdfFile = folder.createFile(pdfBlob).setName(copy.getName() + ".pdf");
   pdfFile.setSharing(
     DriveApp.Access.ANYONE_WITH_LINK,
-    DriveApp.Permission.VIEW
+    DriveApp.Permission.VIEW,
   );
 
   // Trash temp doc
