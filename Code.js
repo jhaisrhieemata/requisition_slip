@@ -137,13 +137,32 @@ function createPdfFromTemplate(data, timestamp) {
   const body = doc.getBody();
 
   try {
-    body.replaceText("{{BRANCH}}", data.branch || "");
-    body.replaceText("{{DATE}}", data.date || "");
-    body.replaceText("{{TO}}", data.to || "");
-    body.replaceText("{{PURPOSE}}", data.purpose || "");
-    body.replaceText("{{TOTAL}}", data.total || "");
-    body.replaceText("{{NOTES}}", data.note || "");
-    body.replaceText("{{REQUESTED_BY}}", data.requested_by || "");
+    // Replace text and set font size to 8 for all fields
+    const fieldsToFormat = [
+      { placeholder: "{{BRANCH}}", value: data.branch || "" },
+      { placeholder: "{{DATE}}", value: data.date || "" },
+      { placeholder: "{{TO}}", value: data.to || "" },
+      { placeholder: "{{PURPOSE}}", value: data.purpose || "" },
+      { placeholder: "{{TOTAL}}", value: data.total || "" },
+      { placeholder: "{{NOTES}}", value: data.note || "" },
+      { placeholder: "{{REQUESTED_BY}}", value: data.requested_by || "" },
+    ];
+
+    fieldsToFormat.forEach((field) => {
+      body.replaceText(field.placeholder, field.value);
+      // Find and format the replaced text with font size 8
+      try {
+        const search = body.findText(field.value);
+        if (search) {
+          const element = search.getElement();
+          if (element.getType() === DocumentApp.ElementType.TEXT) {
+            element.asText().setFontSize(8);
+          }
+        }
+      } catch (e) {
+        // Ignore formatting errors
+      }
+    });
 
     // Insert items table
     const search = body.findText("{{ITEMS}}");
@@ -202,7 +221,7 @@ function createPdfFromTemplate(data, timestamp) {
                 para
                   .setAlignment(DocumentApp.HorizontalAlignment.CENTER)
                   .setBold(true)
-                  .setFontSize(9);
+                  .setFontSize(8);
               } catch (e) {
                 para
                   .setAlignment(DocumentApp.HorizontalAlignment.CENTER)
